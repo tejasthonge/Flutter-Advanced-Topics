@@ -1,0 +1,186 @@
+
+
+
+
+Performance- 
+
+this is very important parameter of app developmentfiled 
+
+#following are different types basic methodologies to optimize the performance of our app
+
+
+##1Tracing:
+
+    in this we are traking which program or function or task take consumes the 
+    how mush oc time
+
+
+    void myConsumtion(){
+        Timeline.starSync("myConsumtion");
+
+        //work code
+
+        Timeline.finishSync();
+    }  
+
+
+##2FlameChart:
+
+    -it is an graphical representation of the time required to build any widget or complite some fun. or the method 
+    Flame Chart Structure:
+        Horizontal Length: Represents the time spent in a function or process.
+        Vertical Stacking: Indicates function call depth; nested calls appear above their callers.
+        Colors: Often, different colors represent different threads, functions, or types of events.
+
+
+
+##3Trade-off:
+    * Performance vs. Readability: Highly optimized code may be hard to read and maintain.
+    * Memory vs. Processing Time: Using more memory (like caching) can reduce computational overhead, but it increases memory usage.
+    * Consistency vs. Availability: In distributed systems, you often need to choose between having consistent data or having the system always available.
+    * In practice, you should weigh these trade-offs based on the specific needs of your project or system. Would you like to dive deeper into any of these trade-offs?
+
+
+##4Tools -Basics:
+    Profile and Debug mode:
+        -by defoult debug mode is much slover as comper to profile mode or the production mode 
+
+
+    #1 Avoide work on UI Thread
+    
+    #2Minimum use of expensive Widgets
+    
+    #3Track The Widgets builds
+    
+    #4DartDev Tools
+    
+    #5Observatory
+
+
+Note: 
+    - for the logical time or the time cusming optetion create new isolate and run on it like bellow 
+
+
+-->
+floowing is the basic code of it 
+
+import "dart:developer";
+import "dart:isolate";
+
+import "package:flutter/material.dart";
+import "package:lottie/lottie.dart";
+
+//In dart only one thread is present 
+//but in other programing languages when block the one thread then the to perfom te the other opretions they uses the other thred known as muilty threading 
+//but in dart thire are other concept known as isolate 
+
+void main(){
+
+  runApp(MyApp());
+}
+
+double? tottal=0;
+
+class MyApp extends StatelessWidget {
+
+  @override 
+  Widget build(BuildContext context){
+    return const MaterialApp(
+      
+      home:IcolateView(),
+    );
+  }
+
+}
+
+
+class IcolateView extends StatefulWidget {
+  const IcolateView({super.key});
+
+  @override
+  State<IcolateView> createState() => _IcolateViewState();
+}
+
+//double 
+class _IcolateViewState extends State<IcolateView> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold( 
+
+
+      body: Center(
+        child: Column( 
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [  
+        
+            LottieBuilder.network(
+              "https://lottie.host/805c6f55-acf7-43ac-9685-863f639708b3/AgErf9OVZQ.json"
+            ),
+        
+            Text(tottal.toString()),
+        
+          ElevatedButton(
+            onPressed: (){
+              complexTask();  //her we call the the complex task 
+                              //due to that the main isolate is loadded and ui is stoped to show the gif 
+                              //gif view is just for undstand the what is hoppening when we call any complex tastk
+
+              //dou of that comlex task ui is bolocked to avid this we can use another isolate to perofom the these complex task
+
+            },
+             child: const Text("without Isolate")),
+
+
+//Isolate:
+              ElevatedButton(
+              onPressed: ()async{
+
+                final recevePort = ReceivePort();
+
+                //Isolate.spawn is createing the new instance
+                await Isolate.spawn(complexTaskWithNewIsolate, recevePort.sendPort);
+                recevePort.listen((total){
+                  setState(() {
+                    tottal = total;
+                  });
+                });
+            },
+             child: const Text("with Isolate")),
+        
+        
+          ],
+        ),
+      ),
+    );
+  }
+
+  double complexTask(){
+
+     tottal =0.0;
+
+    for (int i = 1 ;i<=10000;i++){//you cam incresses the loop 
+        tottal = tottal! + i;//for each etration it will add the new addition opration
+        log(tottal.toString());
+    }
+    setState(() {});
+    return tottal!;
+  }
+}
+
+// --- End of the Class 
+
+//we have to wrote indepent method mens not inside the class 
+
+
+ complexTaskWithNewIsolate(SendPort sendPort)async{
+
+  double total = tottal!;
+  for (int i = 0 ;i<=100000;i++){
+
+    total = total + i;
+    log(total.toString());
+  }
+  
+  sendPort.send(total);
+
+}

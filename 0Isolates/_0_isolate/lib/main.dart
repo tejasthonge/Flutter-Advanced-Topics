@@ -104,7 +104,7 @@ class _IcolateViewState extends State<IcolateView> {
 
 // --- End of the Class 
 
-//we have to wrote indepent method mens not inside the class 
+//we have to wroke indepent method means not inside the  onter class  
 
 
  complexTaskWithNewIsolate(SendPort sendPort)async{
